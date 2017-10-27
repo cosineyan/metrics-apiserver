@@ -1,0 +1,49 @@
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: metrics-apiserver1
+  namespace: custom-metrics
+  labels:
+    app: metrics-apiserver1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: metrics-apiserver1
+  template:
+    metadata:
+      labels:
+        app: metrics-apiserver1
+    spec:
+      tolerations:
+      - key: beta.kubernetes.io/arch
+        value: arm
+        effect: NoSchedule
+      - key: beta.kubernetes.io/arch
+        value: arm64
+        effect: NoSchedule
+      serviceAccountName: custom-metrics-apiserver
+      containers:
+      - name: metrics-apiserver1
+        image: cosineyyy/metrics-apiserver:1.0
+        args:
+        - --rate-interval=60s
+        - --v=10
+        - --logtostderr=true
+        ports:
+        - containerPort: 443
+        securityContext:
+          runAsUser: 0
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: metrics-apiserver1
+  namespace: custom-metrics
+spec:
+  ports:
+  - port: 443
+    targetPort: 443
+  selector:
+    app: metrics-apiserver1
